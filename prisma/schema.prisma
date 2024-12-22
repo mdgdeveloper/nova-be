@@ -12,3 +12,122 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Define Enums Required
+enum PaymentMethod {
+  CASH
+  CARD
+}
+
+enum RoleName {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+// Definition of Data Models
+
+model Client {
+  client_id    Int           @id @default(autoincrement())
+  first_name   String
+  last_name    String
+  phone_number String?
+  email        String?       @unique
+  created_at   DateTime      @default(now())
+  Transactions Transaction[]
+}
+
+model Employee {
+  employee_id  Int           @id @default(autoincrement())
+  first_name   String
+  last_name    String
+  phone_number String?
+  email        String?       @unique
+  role         String?
+  created_at   DateTime      @default(now())
+  Transactions Transaction[]
+  User         User?
+}
+
+model Service {
+  service_id          Int                  @id @default(autoincrement())
+  name                String
+  description         String?
+  price               Decimal
+  cost                Decimal
+  TransactionServices TransactionService[]
+}
+
+model Product {
+  product_id          Int                  @id @default(autoincrement())
+  name                String
+  description         String?
+  price               Decimal
+  cost                Decimal
+  supplier_id         Int?
+  Supplier            Supplier?            @relation(fields: [supplier_id], references: [supplier_id])
+  TransactionProducts TransactionProduct[]
+}
+
+model Supplier {
+  supplier_id  Int       @id @default(autoincrement())
+  name         String
+  contact_name String?
+  phone_number String?
+  email        String?
+  address      String?
+  Products     Product[]
+}
+
+model Transaction {
+  transaction_id      Int                  @id @default(autoincrement())
+  client_id           Int
+  employee_id         Int
+  total_amount        Decimal
+  payment_method      PaymentMethod
+  transaction_time    DateTime             @default(now())
+  Client              Client               @relation(fields: [client_id], references: [client_id])
+  Employee            Employee             @relation(fields: [employee_id], references: [employee_id])
+  TransactionProducts TransactionProduct[]
+  TransactionServices TransactionService[]
+}
+
+model TransactionService {
+  transaction_service_id Int         @id @default(autoincrement())
+  transaction_id         Int
+  service_id             Int
+  quantity               Int
+  Transaction            Transaction @relation(fields: [transaction_id], references: [transaction_id])
+  Service                Service     @relation(fields: [service_id], references: [service_id])
+
+  @@unique([transaction_id, service_id])
+}
+
+model TransactionProduct {
+  transaction_product_id Int         @id @default(autoincrement())
+  transaction_id         Int
+  product_id             Int
+  quantity               Int
+  price                  Decimal
+  Transaction            Transaction @relation(fields: [transaction_id], references: [transaction_id])
+  Product                Product     @relation(fields: [product_id], references: [product_id])
+
+  @@unique([transaction_id, product_id])
+}
+
+model User {
+  user_id       Int       @id @default(autoincrement())
+  employee_id   Int?      @unique
+  username      String    @unique
+  password_hash String
+  role_id       Int?
+  created_at    DateTime  @default(now())
+  Employee      Employee? @relation(fields: [employee_id], references: [employee_id])
+  Role          Role?     @relation(fields: [role_id], references: [role_id])
+}
+
+model Role {
+  role_id   Int      @id @default(autoincrement())
+  role_name RoleName @unique
+  Users     User[]
+}
