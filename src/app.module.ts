@@ -10,7 +10,14 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [ClientsModule, EmployeesModule, ProductsModule, ServicesModule, TransactionsModule, UsersModule],
+  imports: [
+    ClientsModule,
+    EmployeesModule,
+    ProductsModule,
+    ServicesModule,
+    TransactionsModule,
+    UsersModule,
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
