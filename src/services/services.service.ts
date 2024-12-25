@@ -1,26 +1,81 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { PrismaService } from '../prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ServicesService {
-  create(createServiceDto: CreateServiceDto) {
-    return 'This action adds a new service';
+  constructor(private prisma: PrismaService) {}
+  async create(createServiceDto: CreateServiceDto) {
+    try {
+      return await this.prisma.service.create({
+        data: createServiceDto,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          const target =
+            error.meta && error.meta.target
+              ? (error.meta.target as string[]).join(', ')
+              : 'field';
+          throw new ConflictException(
+            `Un servicio con el campo ${target} ya existe`,
+          );
+        }
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 
-  findAll() {
-    return `This action returns all services`;
+  async findAll() {
+    return await this.prisma.service.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} service`;
+  async findOne(id: number) {
+    const service = await this.prisma.service.findUnique({
+      where: { service_id: id },
+    });
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+    return service;
   }
 
-  update(id: number, updateServiceDto: UpdateServiceDto) {
-    return `This action updates a #${id} service`;
+  async update(id: number, updateServiceDto: UpdateServiceDto) {
+    try {
+      const service = await this.prisma.service.update({
+        where: { service_id: id },
+        data: updateServiceDto,
+      });
+      return service;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException('Service not found');
+        }
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} service`;
+  async remove(id: number) {
+    try {
+      return await this.prisma.service.delete({
+        where: { service_id: id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException('Service not found');
+        }
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 }
