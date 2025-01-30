@@ -8,6 +8,8 @@ import { ProductsModule } from './products/products.module';
 import { ServicesModule } from './services/services.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -17,8 +19,10 @@ import { UsersModule } from './users/users.module';
     ServicesModule,
     TransactionsModule,
     UsersModule,
+    AuthModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule {}
+export class AppModule { }
